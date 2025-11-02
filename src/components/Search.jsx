@@ -1,7 +1,7 @@
-// src/components/Search.jsx
-import { useState, useEffect } from "react";
+// components/Search.jsx
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchStates, fetchCities } from "../api";
+import axios from "axios";
 
 export default function Search() {
   const [states, setStates] = useState([]);
@@ -11,32 +11,40 @@ export default function Search() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchStates().then(setStates);
+    axios
+      .get("https://meddata-backend.onrender.com/states")
+      .then((res) => setStates(res.data))
+      .catch((err) => console.error(err));
   }, []);
 
-  async function handleStateChange(e) {
-    const state = e.target.value;
-    setSelectedState(state);
-    if (state) {
-      const data = await fetchCities(state);
-      setCities(data);
+  useEffect(() => {
+    if (selectedState) {
+      axios
+        .get(`https://meddata-backend.onrender.com/cities/${selectedState}`)
+        .then((res) => setCities(res.data))
+        .catch((err) => console.error(err));
     }
-  }
+  }, [selectedState]);
 
-  function handleSubmit(e) {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (selectedState && selectedCity) {
       navigate(`/results?state=${selectedState}&city=${selectedCity}`);
     }
-  }
+  };
 
   return (
-    <form onSubmit={handleSubmit} className="search-section">
+    <form onSubmit={handleSubmit} className="search-form">
       <div id="state">
-        <select value={selectedState} onChange={handleStateChange}>
+        <select
+          value={selectedState}
+          onChange={(e) => setSelectedState(e.target.value)}
+        >
           <option value="">Select State</option>
-          {states.map((s, i) => (
-            <option key={i}>{s}</option>
+          {states.map((state, i) => (
+            <option key={i} value={state}>
+              {state}
+            </option>
           ))}
         </select>
       </div>
@@ -47,13 +55,15 @@ export default function Search() {
           onChange={(e) => setSelectedCity(e.target.value)}
         >
           <option value="">Select City</option>
-          {cities.map((c, i) => (
-            <option key={i}>{c}</option>
+          {cities.map((city, i) => (
+            <option key={i} value={city}>
+              {city}
+            </option>
           ))}
         </select>
       </div>
 
-      <button id="searchBtn" type="submit">
+      <button type="submit" id="searchBtn">
         Search
       </button>
     </form>
