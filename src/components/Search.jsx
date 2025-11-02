@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
-import { getStates, getCities } from "../api";
+// src/components/Search.jsx
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { fetchStates, fetchCities } from "../api";
 
 export default function Search() {
   const [states, setStates] = useState([]);
@@ -10,33 +11,32 @@ export default function Search() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    getStates().then(setStates);
+    fetchStates().then(setStates);
   }, []);
 
-  useEffect(() => {
-    if (selectedState) {
-      getCities(selectedState).then(setCities);
+  async function handleStateChange(e) {
+    const state = e.target.value;
+    setSelectedState(state);
+    if (state) {
+      const data = await fetchCities(state);
+      setCities(data);
     }
-  }, [selectedState]);
+  }
 
-  const handleSubmit = (e) => {
+  function handleSubmit(e) {
     e.preventDefault();
-    navigate(`/search?state=${selectedState}&city=${selectedCity}`);
-  };
+    if (selectedState && selectedCity) {
+      navigate(`/results?state=${selectedState}&city=${selectedCity}`);
+    }
+  }
 
   return (
-    <form onSubmit={handleSubmit} className="search-form">
+    <form onSubmit={handleSubmit} className="search-section">
       <div id="state">
-        <select
-          value={selectedState}
-          onChange={(e) => setSelectedState(e.target.value)}
-          required
-        >
+        <select value={selectedState} onChange={handleStateChange}>
           <option value="">Select State</option>
-          {states.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
+          {states.map((s, i) => (
+            <option key={i}>{s}</option>
           ))}
         </select>
       </div>
@@ -45,18 +45,15 @@ export default function Search() {
         <select
           value={selectedCity}
           onChange={(e) => setSelectedCity(e.target.value)}
-          required
         >
           <option value="">Select City</option>
-          {cities.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
+          {cities.map((c, i) => (
+            <option key={i}>{c}</option>
           ))}
         </select>
       </div>
 
-      <button type="submit" id="searchBtn">
+      <button id="searchBtn" type="submit">
         Search
       </button>
     </form>
