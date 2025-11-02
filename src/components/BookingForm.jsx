@@ -20,19 +20,19 @@ const BookingForm = ({ hospital, onClose }) => {
       bookingTime: time,
     };
 
-    // Save booking to localStorage (append if exists)
     const existing = JSON.parse(localStorage.getItem("bookings")) || [];
     localStorage.setItem("bookings", JSON.stringify([...existing, booking]));
 
     alert("Appointment booked successfully!");
-
     onClose();
   };
 
-  // For simplicity, show fixed time options & date input
   return (
     <div style={{ border: "1px solid black", padding: 10, marginTop: 20 }}>
       <h2>Book Appointment at {hospital["Hospital Name"]}</h2>
+
+      {/* Add label "Today" */}
+      <p>Today</p>
 
       <label>
         Select Date:
@@ -44,22 +44,44 @@ const BookingForm = ({ hospital, onClose }) => {
         />
       </label>
 
-      <div>
-        <p>Select Time:</p>
-        {["10:00 AM", "2:00 PM", "4:00 PM"].map((slot) => (
-          <label key={slot} style={{ marginRight: 10 }}>
-            <input
-              type="radio"
-              name="time"
-              value={slot}
-              checked={time === slot}
-              onChange={(e) => setTime(e.target.value)}
-            />
-            {slot}
-          </label>
-        ))}
-      </div>
+      {/* Add labels for time segments */}
+      <p>Morning</p>
+      <label style={{ marginRight: 10 }}>
+        <input
+          type="radio"
+          name="time"
+          value="10:00 AM"
+          checked={time === "10:00 AM"}
+          onChange={(e) => setTime(e.target.value)}
+        />
+        10:00 AM
+      </label>
 
+      <p>Afternoon</p>
+      <label style={{ marginRight: 10 }}>
+        <input
+          type="radio"
+          name="time"
+          value="2:00 PM"
+          checked={time === "2:00 PM"}
+          onChange={(e) => setTime(e.target.value)}
+        />
+        2:00 PM
+      </label>
+
+      <p>Evening</p>
+      <label style={{ marginRight: 10 }}>
+        <input
+          type="radio"
+          name="time"
+          value="4:00 PM"
+          checked={time === "4:00 PM"}
+          onChange={(e) => setTime(e.target.value)}
+        />
+        4:00 PM
+      </label>
+
+      <br />
       <button onClick={handleBooking}>Confirm Booking</button>
       <button onClick={onClose} style={{ marginLeft: 10 }}>
         Cancel
