@@ -1,42 +1,71 @@
-// components/BookingForm.jsx
-import { useState } from "react";
+import React, { useState } from "react";
 
-export default function BookingForm({ hospital }) {
+const BookingForm = ({ hospital, onClose }) => {
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
 
-  const handleBook = () => {
+  const handleBooking = () => {
+    if (!date || !time) {
+      alert("Please select both date and time.");
+      return;
+    }
+
     const booking = {
-      hospitalName: hospital["Hospital Name"],
-      date,
-      time,
-      city: hospital.City,
-      state: hospital.State,
+      "Hospital Name": hospital["Hospital Name"],
+      City: hospital.City,
+      State: hospital.State,
+      "Hospital Type": hospital["Hospital Type"],
+      "Hospital overall rating": hospital["Hospital overall rating"],
+      bookingDate: date,
+      bookingTime: time,
     };
 
+    // Save booking to localStorage (append if exists)
     const existing = JSON.parse(localStorage.getItem("bookings")) || [];
-    const updated = [...existing, booking];
-    localStorage.setItem("bookings", JSON.stringify(updated));
-    alert("Booking successful!");
+    localStorage.setItem("bookings", JSON.stringify([...existing, booking]));
+
+    alert("Appointment booked successfully!");
+
+    onClose();
   };
 
+  // For simplicity, show fixed time options & date input
   return (
-    <div>
-      <p>Today</p>
-      <p>Morning</p>
-      <p>Afternoon</p>
-      <p>Evening</p>
-      <input
-        type="date"
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
-      />
-      <input
-        type="time"
-        value={time}
-        onChange={(e) => setTime(e.target.value)}
-      />
-      <button onClick={handleBook}>Confirm Booking</button>
+    <div style={{ border: "1px solid black", padding: 10, marginTop: 20 }}>
+      <h2>Book Appointment at {hospital["Hospital Name"]}</h2>
+
+      <label>
+        Select Date:
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          min={new Date().toISOString().split("T")[0]}
+        />
+      </label>
+
+      <div>
+        <p>Select Time:</p>
+        {["10:00 AM", "2:00 PM", "4:00 PM"].map((slot) => (
+          <label key={slot} style={{ marginRight: 10 }}>
+            <input
+              type="radio"
+              name="time"
+              value={slot}
+              checked={time === slot}
+              onChange={(e) => setTime(e.target.value)}
+            />
+            {slot}
+          </label>
+        ))}
+      </div>
+
+      <button onClick={handleBooking}>Confirm Booking</button>
+      <button onClick={onClose} style={{ marginLeft: 10 }}>
+        Cancel
+      </button>
     </div>
   );
-}
+};
+
+export default BookingForm;

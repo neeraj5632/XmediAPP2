@@ -1,71 +1,94 @@
-// components/Search.jsx
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
+import BookingForm from "./BookingForm";
 
-export default function Search() {
-  const [states, setStates] = useState([]);
-  const [cities, setCities] = useState([]);
-  const [selectedState, setSelectedState] = useState("");
-  const [selectedCity, setSelectedCity] = useState("");
-  const navigate = useNavigate();
+const Search = () => {
+  const [state, setState] = useState("");
+  const [city, setCity] = useState("");
+  const [hospitals, setHospitals] = useState([]);
+  const [bookingHospital, setBookingHospital] = useState(null);
 
-  useEffect(() => {
-    axios
-      .get("https://meddata-backend.onrender.com/states")
-      .then((res) => setStates(res.data))
-      .catch((err) => console.error(err));
-  }, []);
+  // State and city lists (could also fetch dynamically if needed)
+  const states = ["Alabama", "California", "Texas"]; // example states
+  const cities = {
+    Alabama: ["DOTHAN", "MONTGOMERY"],
+    California: ["LOS ANGELES", "SAN FRANCISCO"],
+    Texas: ["HOUSTON", "DALLAS"],
+  };
 
-  useEffect(() => {
-    if (selectedState) {
-      axios
-        .get(`https://meddata-backend.onrender.com/cities/${selectedState}`)
-        .then((res) => setCities(res.data))
-        .catch((err) => console.error(err));
-    }
-  }, [selectedState]);
+  const fetchHospitals = () => {
+    if (!state || !city) return;
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (selectedState && selectedCity) {
-      navigate(`/results?state=${selectedState}&city=${selectedCity}`);
-    }
+    fetch(
+      `https://meddata-backend.onrender.com/data?state=${state}&city=${city}`
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        setHospitals(data);
+      })
+      .catch(() => setHospitals([]));
   };
 
   return (
-    <form onSubmit={handleSubmit} className="search-form">
+    <div>
       <div id="state">
-        <select
-          value={selectedState}
-          onChange={(e) => setSelectedState(e.target.value)}
-        >
-          <option value="">Select State</option>
-          {states.map((state, i) => (
-            <option key={i} value={state}>
-              {state}
-            </option>
+        <button type="button">Select State</button>
+        <ul>
+          {states.map((st) => (
+            <li
+              key={st}
+              onClick={() => setState(st)}
+              style={{ cursor: "pointer" }}
+            >
+              {st}
+            </li>
           ))}
-        </select>
+        </ul>
       </div>
 
       <div id="city">
-        <select
-          value={selectedCity}
-          onChange={(e) => setSelectedCity(e.target.value)}
-        >
-          <option value="">Select City</option>
-          {cities.map((city, i) => (
-            <option key={i} value={city}>
-              {city}
-            </option>
+        <button type="button">Select City</button>
+        <ul>
+          {(cities[state] || []).map((ct) => (
+            <li
+              key={ct}
+              onClick={() => setCity(ct)}
+              style={{ cursor: "pointer" }}
+            >
+              {ct}
+            </li>
           ))}
-        </select>
+        </ul>
       </div>
 
-      <button type="submit" id="searchBtn">
+      <button id="searchBtn" onClick={fetchHospitals}>
         Search
       </button>
-    </form>
+
+      {hospitals.length > 0 && (
+        <h1>
+          {hospitals.length} medical centers available in {city.toLowerCase()}
+        </h1>
+      )}
+
+      <ul>
+        {hospitals.map((hospital, idx) => (
+          <li key={idx}>
+            <h3>{hospital["Hospital Name"]}</h3>
+            <button onClick={() => setBookingHospital(hospital)}>
+              Book FREE Center Visit
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      {bookingHospital && (
+        <BookingForm
+          hospital={bookingHospital}
+          onClose={() => setBookingHospital(null)}
+        />
+      )}
+    </div>
   );
-}
+};
+
+export default Search;
